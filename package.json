@@ -11,7 +11,8 @@
     "clean": "tsc --build --clean",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts,.tsx .",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\""
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\"",
+    "postinstall": "tsc"
   },
   "license": "MIT",
   "dependencies": {
