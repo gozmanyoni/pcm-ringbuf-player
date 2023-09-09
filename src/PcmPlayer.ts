@@ -1,7 +1,7 @@
 import { RingBuffer } from 'ringbuf.js'
 
 const RENDER_QUANTUM_FRAMES = 128
-const maxQuanta = 100 // ringbuffer size in audio blocks
+const MAX_BLOCKS = 100 // ringbuffer size in audio blocks
 
 export class PcmPlayer {
   protected sourceName: string = 'pcm-worklet-processor'
@@ -10,8 +10,10 @@ export class PcmPlayer {
   private gainNode: GainNode
   private channels: number
   private worklet: AudioWorkletNode | undefined
-  private buffers: ArrayBufferLike[] = []
-  private sab = new SharedArrayBuffer(RENDER_QUANTUM_FRAMES * 4 * maxQuanta)
+  private buffers: Int16Array[] = []
+  private sab = new SharedArrayBuffer(
+    RENDER_QUANTUM_FRAMES * Float32Array.BYTES_PER_ELEMENT * MAX_BLOCKS,
+  )
   private rb = new RingBuffer(this.sab, Int16Array)
 
   constructor(sampleRate: number, channels: number) {
@@ -25,11 +27,11 @@ export class PcmPlayer {
     this.channels = channels
   }
 
-  private feedCore(buffer: ArrayBufferLike) {
-    this.rb.push(new Int16Array(buffer))
+  private feedCore(data: Int16Array) {
+    this.rb.push(data)
   }
 
-  feed(source: ArrayBufferLike) {
+  feed(source: Int16Array) {
     if (this.worklet === undefined) {
       this.buffers.push(source)
       return
@@ -39,9 +41,7 @@ export class PcmPlayer {
   }
 
   volume(volume: number) {
-    if (this.gainNode) {
-      this.gainNode.gain.value = volume
-    }
+    this.gainNode.gain.value = volume
   }
 
   async start() {
@@ -70,6 +70,7 @@ export class PcmPlayer {
     if (this.context.state !== 'closed') {
       await this.context.close()
     }
+    this.gainNode.disconnect(this.context.destination)
     this.worklet?.disconnect(this.context.destination)
     this.worklet = undefined
   }
