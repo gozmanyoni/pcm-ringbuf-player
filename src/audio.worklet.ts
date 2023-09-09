@@ -1,6 +1,8 @@
 // WebAudio's render quantum size.
 const RENDER_QUANTUM_FRAMES = 128
 
+const RING_POINTERS_SIZE = 8
+
 /**
  * A Reader class used by this worklet to read from a Adapted from a SharedArrayBuffer written to by ringbuf.js on the main thread, Adapted from https://github.com/padenot/ringbuf.js
  * MPL-2.0 License (see RingBuffer_LICENSE.txt)
@@ -13,14 +15,15 @@ class RingBuffReader {
   private readPointer: Uint32Array
 
   constructor(buffer: SharedArrayBuffer) {
-    const storageSize = (buffer.byteLength - 8) / Int16Array.BYTES_PER_ELEMENT
-    this.storage = new Int16Array(buffer, 8, storageSize)
+    const storageSize =
+      (buffer.byteLength - RING_POINTERS_SIZE) / Int16Array.BYTES_PER_ELEMENT
+    this.storage = new Int16Array(buffer, RING_POINTERS_SIZE, storageSize)
     // matching capacity and R/W pointers defined in ringbuf.js
     this.writePointer = new Uint32Array(buffer, 0, 1)
     this.readPointer = new Uint32Array(buffer, 4, 1)
   }
 
-  readTo(array: TypedArray): number {
+  readTo(array: Int16Array): number {
     const { readPos, available } = this.getReadInfo()
     if (available === 0) {
       return 0
@@ -84,13 +87,17 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
     this.readerOutput = new Int16Array(RENDER_QUANTUM_FRAMES * channels)
   }
 
+  toFloat32(value: number) {
+    return value / 32768
+  }
+
   process(_: Float32Array[][], outputs: Float32Array[][]) {
     const outputChannels = outputs[0]
 
     const { available } = this.reader.getReadInfo()
     if (available < this.readerOutput.length) {
       if (!this.underflowing) {
-        console.log('UNDERFLOW', available)
+        console.debug('UNDERFLOW', available)
       }
       this.underflowing = true
       return true
@@ -100,10 +107,14 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
 
     // play interleaved audio as it comes from the dongle by splitting it across the channels
     for (let i = 0; i < this.readerOutput.length; i++) {
-      for (let channel = 0; channel < this.channels; channel++) {
-        const pcm16Value = this.readerOutput[2 * i + channel]
-        const float32Value = pcm16Value / 32768
-        outputChannels[channel][i] = float32Value
+      if (this.channels === 2) {
+        for (let channel = 0; channel < this.channels; channel++) {
+          outputChannels[channel][i] = this.toFloat32(
+            this.readerOutput[2 * i + channel],
+          )
+        }
+      } else {
+        outputChannels[0][i] = this.toFloat32(this.readerOutput[i])
       }
     }
 
