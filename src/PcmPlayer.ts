@@ -4,7 +4,7 @@ const RENDER_QUANTUM_FRAMES = 128
 const MAX_BLOCKS = 100 // ringbuffer size in audio blocks
 
 export class PcmPlayer {
-  protected sourceName: string = 'pcm-worklet-processor'
+  private workletName: string = 'pcm-worklet-processor'
 
   private context: AudioContext
   private gainNode: GainNode
@@ -27,7 +27,7 @@ export class PcmPlayer {
     this.channels = channels
   }
 
-  private feedCore(data: Int16Array) {
+  private feedWorklet(data: Int16Array) {
     this.rb.push(data)
   }
 
@@ -37,7 +37,7 @@ export class PcmPlayer {
       return
     }
 
-    this.feedCore(source)
+    this.feedWorklet(source)
   }
 
   volume(volume: number) {
@@ -49,7 +49,7 @@ export class PcmPlayer {
       new URL('./audio.worklet.js', import.meta.url),
     )
 
-    this.worklet = new AudioWorkletNode(this.context, this.sourceName, {
+    this.worklet = new AudioWorkletNode(this.context, this.workletName, {
       numberOfInputs: 0,
       numberOfOutputs: 1,
       outputChannelCount: [this.channels],
@@ -61,7 +61,7 @@ export class PcmPlayer {
     this.worklet.connect(this.context.destination)
 
     for (const source of this.buffers) {
-      this.feedCore(source)
+      this.feedWorklet(source)
     }
     this.buffers.length = 0
   }

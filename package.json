@@ -1,7 +1,7 @@
 {
   "name": "pcm-ringbuf-player",
   "version": "0.0.1",
-  "description": "Plays PCM Audio in the browser using a ring buffer",
+  "description": "Plays PCM Audio in the browser leveraging a ring buffer for efficient transport of data",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -13,7 +13,14 @@
     "lint": "eslint --ext .js,.ts,.tsx .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\""
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gozmanyoni/pcm-ringbuf-player.git"
+  },
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gozmanyoni/pcm-ringbuf-player/issues"
+  },
   "dependencies": {
     "ringbuf.js": "^0.3.6"
   },
