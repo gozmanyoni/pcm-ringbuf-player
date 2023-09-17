@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "prepare": "pnpm run build",
+    "prepare": "tsc --build",
     "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "build": "tsc --build",
