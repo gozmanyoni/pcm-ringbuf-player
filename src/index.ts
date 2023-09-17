@@ -1,1 +1,1 @@
-export { PcmPlayer } from './PcmPlayer'
+export { PcmPlayer } from './PcmPlayer.js'
