@@ -2,6 +2,14 @@
   "name": "pcm-ringbuf-player",
   "version": "0.0.3",
   "description": "Plays PCM Audio in the browser leveraging a ring buffer for efficient transport of data",
+  "keywords": [
+    "audio",
+    "pcm",
+    "player",
+    "webaudio",
+    "stream",
+    "websocket"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
