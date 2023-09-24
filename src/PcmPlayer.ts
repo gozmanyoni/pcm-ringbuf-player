@@ -6,8 +6,8 @@ const MAX_BLOCKS = 100 // ringbuffer size in audio blocks
 export class PcmPlayer {
   private workletName: string = 'pcm-worklet-processor'
 
-  private context: AudioContext
-  private gainNode: GainNode
+  private context: AudioContext | undefined
+  private gainNode: GainNode | undefined
   private channels: number
   private worklet: AudioWorkletNode | undefined
   private buffers: Int16Array[] = []
@@ -41,10 +41,18 @@ export class PcmPlayer {
   }
 
   volume(volume: number) {
-    this.gainNode.gain.value = volume
+    if (this.gainNode) {
+      this.gainNode.gain.value = volume
+    }
   }
 
   async start() {
+    if (!this.context) {
+      throw Error(
+        'Illegal state - context does not exist - create a new PcmPlayer',
+      )
+    }
+
     await this.context.audioWorklet.addModule(
       new URL('./audio.worklet.js', import.meta.url),
     )
@@ -67,11 +75,15 @@ export class PcmPlayer {
   }
 
   async stop() {
+    if (!this.context) return
+
     if (this.context.state !== 'closed') {
       await this.context.close()
     }
-    this.gainNode.disconnect(this.context.destination)
-    this.worklet?.disconnect(this.context.destination)
+    this.gainNode?.disconnect()
+    this.worklet?.disconnect()
+    this.context = undefined
+    this.gainNode = undefined
     this.worklet = undefined
   }
 }
