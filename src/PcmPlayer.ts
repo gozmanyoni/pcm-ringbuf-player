@@ -40,9 +40,9 @@ export class PcmPlayer {
     this.feedWorklet(source)
   }
 
-  volume(volume: number) {
+  volume(volume: number, duration: number =0) {
     if (this.gainNode) {
-      this.gainNode.gain.value = volume
+      this.gainNode.gain.setTargetAtTime(volume, this.context!.currentTime + duration, duration / 3)
     }
   }
 
@@ -66,7 +66,7 @@ export class PcmPlayer {
         channels: this.channels,
       },
     })
-    this.worklet.connect(this.context.destination)
+    this.worklet.connect(this.gainNode!)
 
     for (const source of this.buffers) {
       this.feedWorklet(source)
