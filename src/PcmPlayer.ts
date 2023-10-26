@@ -40,16 +40,20 @@ export class PcmPlayer {
     this.feedWorklet(source)
   }
 
-  volume(volume: number, duration: number =0) {
+  volume(volume: number, duration: number = 0) {
     if (this.gainNode) {
-      this.gainNode.gain.setTargetAtTime(volume, this.context!.currentTime + duration, duration / 3)
+      this.gainNode.gain.setTargetAtTime(
+        volume,
+        this.context!.currentTime + duration,
+        duration / 3,
+      )
     }
   }
 
   async start() {
-    if (!this.context) {
+    if (!this.context || !this.gainNode) {
       throw Error(
-        'Illegal state - context does not exist - create a new PcmPlayer',
+        'Illegal state - context or gainNode not set - create a new PcmPlayer',
       )
     }
 
@@ -66,7 +70,7 @@ export class PcmPlayer {
         channels: this.channels,
       },
     })
-    this.worklet.connect(this.gainNode!)
+    this.worklet.connect(this.gainNode)
 
     for (const source of this.buffers) {
       this.feedWorklet(source)
