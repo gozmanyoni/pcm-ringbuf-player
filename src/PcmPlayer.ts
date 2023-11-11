@@ -14,7 +14,7 @@ export class PcmPlayer {
   private sab = new SharedArrayBuffer(
     RENDER_QUANTUM_FRAMES * Float32Array.BYTES_PER_ELEMENT * MAX_BLOCKS,
   )
-  private rb = new RingBuffer(this.sab, Int16Array)
+  public rb = new RingBuffer(this.sab, Int16Array)
 
   constructor(sampleRate: number, channels: number) {
     this.context = new AudioContext({
