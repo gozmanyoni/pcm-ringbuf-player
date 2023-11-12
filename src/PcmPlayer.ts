@@ -31,6 +31,10 @@ export class PcmPlayer {
     this.rb.push(data)
   }
 
+  getRawBuffer() {
+    return this.sab
+  }
+
   feed(source: Int16Array) {
     if (this.worklet === undefined) {
       this.buffers.push(source)
