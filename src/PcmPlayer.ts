@@ -1,7 +1,7 @@
 import { RingBuffer } from 'ringbuf.js'
 
 const RENDER_QUANTUM_FRAMES = 128
-const MAX_BLOCKS = 100 // ringbuffer size in audio blocks
+const MAX_BLOCKS = 100
 
 export class PcmPlayer {
   private workletName: string = 'pcm-worklet-processor'
@@ -36,7 +36,7 @@ export class PcmPlayer {
   }
 
   feed(source: Int16Array) {
-    if (this.worklet === undefined) {
+    if (!this.worklet) {
       this.buffers.push(source)
       return
     }
@@ -61,9 +61,16 @@ export class PcmPlayer {
       )
     }
 
-    await this.context.audioWorklet.addModule(
-      new URL('./audio.worklet.js', import.meta.url),
-    )
+    const isDev =
+      typeof import.meta !== 'undefined' &&
+      typeof (import.meta as any).env !== 'undefined' &&
+      !!(import.meta as any).env.DEV
+
+    const workletURL = isDev
+      ? '/audio.worklet.js'
+      : new URL('./audio.worklet.js', import.meta.url).href;
+
+    await this.context.audioWorklet.addModule(workletURL)
 
     this.worklet = new AudioWorkletNode(this.context, this.workletName, {
       numberOfInputs: 0,
