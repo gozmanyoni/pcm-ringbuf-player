@@ -7,7 +7,7 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   modulePathIgnorePatterns: ['dist'],
-  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       useESM: true,
