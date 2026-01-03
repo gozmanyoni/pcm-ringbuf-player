@@ -1,0 +1,130 @@
+.app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+header {
+  margin-bottom: 3rem;
+}
+
+header p {
+  font-size: 1.1em;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+main {
+  margin-bottom: 3rem;
+}
+
+footer {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid #333;
+  font-size: 0.9em;
+  color: #888;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+}
+
+.tone-player {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.error {
+  background-color: #ff4444;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  min-width: 120px;
+  padding: 0.8em 1.5em;
+  font-size: 1.1em;
+}
+
+.controls button:not(:disabled) {
+  background-color: #646cff;
+  color: white;
+}
+
+.controls button:hover:not(:disabled) {
+  background-color: #535bf2;
+  border-color: #535bf2;
+}
+
+.info {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.info p {
+  margin-bottom: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.info p:last-child {
+  margin-bottom: 0;
+}
+
+.explanation {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: rgba(100, 108, 255, 0.1);
+  border-radius: 8px;
+  text-align: left;
+  border: 1px solid rgba(100, 108, 255, 0.3);
+}
+
+.explanation h3 {
+  margin-top: 0;
+  color: #646cff;
+}
+
+.explanation ul {
+  margin-left: 1.5rem;
+}
+
+.explanation li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+@media (prefers-color-scheme: light) {
+  .tone-player {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .info {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .explanation {
+    background-color: rgba(100, 108, 255, 0.05);
+  }
+
+  footer {
+    border-top: 1px solid #ddd;
+  }
+}
