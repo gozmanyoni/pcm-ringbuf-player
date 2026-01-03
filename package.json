@@ -15,8 +15,8 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "prepare": "tsc --build",
-    "test": "jest --silent",
-    "coverage": "jest --silent --coverage",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --silent",
+    "coverage": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --silent --coverage",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "typecheck": "tsc --noEmit",
