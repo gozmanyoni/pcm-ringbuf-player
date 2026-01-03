@@ -29,7 +29,7 @@ Install dependencies for the example app:
 npm install
 ```
 
-This will automatically copy the `audio.worklet.js` file from the parent library's `dist` folder via the postinstall script.
+The `audio.worklet.js` file from the parent library is automatically copied to the build output by the Vite build plugin during development and production builds.
 
 ## Development
 
@@ -114,7 +114,7 @@ npm run preview
 Make sure you're accessing the dev server via the URL provided by Vite. The required headers are only set by the dev server.
 
 ### "Failed to load audio.worklet.js"
-Run `npm run build` in the parent directory, then `npm install` in this directory to copy the worklet file.
+Make sure you have built the parent library first with `npm run build` in the parent directory. The Vite plugin will automatically copy the worklet file from `../dist/audio.worklet.js`.
 
 ### Audio doesn't play
 Check the browser console for errors. Make sure your browser supports AudioWorklet and SharedArrayBuffer.
