@@ -1,8 +1,15 @@
 .app {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.players-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
 }
 
 header {
@@ -31,11 +38,79 @@ footer p {
   margin-bottom: 0.5rem;
 }
 
-.tone-player {
+.tone-player,
+.wav-player {
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 2rem;
+  text-align: center;
+}
+
+.pcm-type-selector {
+  margin: 1.5rem 0;
+}
+
+.pcm-type-selector label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pcm-type-selector select {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #646cff;
+  color: inherit;
+  cursor: pointer;
+}
+
+.file-input-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.file-input-section input[type="file"] {
+  padding: 0.5em;
+  font-size: 1em;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #646cff;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.file-input-section button {
+  padding: 0.5em 1.5em;
+  font-size: 1em;
+}
+
+.file-info {
   margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.file-info h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #646cff;
+}
+
+.file-info p {
+  margin-bottom: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.file-info p:last-child {
+  margin-bottom: 0;
 }
 
 .error {
@@ -112,11 +187,13 @@ footer p {
 }
 
 @media (prefers-color-scheme: light) {
-  .tone-player {
+  .tone-player,
+  .wav-player {
     background-color: rgba(0, 0, 0, 0.02);
   }
 
-  .info {
+  .info,
+  .file-info {
     background-color: rgba(0, 0, 0, 0.05);
   }
 
@@ -126,5 +203,11 @@ footer p {
 
   footer {
     border-top: 1px solid #ddd;
+  }
+}
+
+@media (max-width: 900px) {
+  .players-container {
+    grid-template-columns: 1fr;
   }
 }

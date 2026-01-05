@@ -1,5 +1,9 @@
 import { PcmPlayer } from './PcmPlayer'
 
+const RENDER_QUANTUM_FRAMES = 128
+const DEFAULT_MAX_BLOCKS = 1000
+const RING_BUFFER_POINTER_SIZE = 8
+
 describe('PcmPlayer', () => {
   let player: PcmPlayer
 
@@ -145,12 +149,160 @@ describe('PcmPlayer', () => {
   })
 
   describe('SharedArrayBuffer management', () => {
-    it('should have correct size for SharedArrayBuffer', () => {
-      const RENDER_QUANTUM_FRAMES = 128
-      const MAX_BLOCKS = 100
+    it('should have correct size for SharedArrayBuffer with default blocks', () => {
       const expectedSize =
-        RENDER_QUANTUM_FRAMES * Float32Array.BYTES_PER_ELEMENT * MAX_BLOCKS
+        RENDER_QUANTUM_FRAMES * Int16Array.BYTES_PER_ELEMENT * DEFAULT_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
       expect(player.getRawBuffer().byteLength).toBe(expectedSize)
     })
+
+    it('should accept custom maxBlocks parameter', () => {
+      const customPlayer = new PcmPlayer(44100, 2, Int16Array, 500)
+      const CUSTOM_MAX_BLOCKS = 500
+      const expectedSize =
+        RENDER_QUANTUM_FRAMES * Int16Array.BYTES_PER_ELEMENT * CUSTOM_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
+      expect(customPlayer.getRawBuffer().byteLength).toBe(expectedSize)
+      customPlayer.stop()
+    })
+  })
+})
+
+describe('PcmPlayer with Int32Array', () => {
+  let player: PcmPlayer<Int32Array>
+
+  beforeEach(() => {
+    player = new PcmPlayer<Int32Array>(44100, 2, Int32Array)
+  })
+
+  afterEach(async () => {
+    await player.stop()
+  })
+
+  describe('Constructor', () => {
+    it('should initialize with Int32Array type', () => {
+      expect(player['pcmType']).toBe(Int32Array)
+      expect(player['pcmTypeInfo'].name).toBe('int32')
+      expect(player['pcmTypeInfo'].bytesPerElement).toBe(4)
+    })
+
+    it('should have correct SharedArrayBuffer size for Int32', () => {
+      const expectedSize =
+        RENDER_QUANTUM_FRAMES * Int32Array.BYTES_PER_ELEMENT * DEFAULT_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
+      expect(player.getRawBuffer().byteLength).toBe(expectedSize)
+    })
+
+    it('should accept custom maxBlocks for Int32', () => {
+      const customPlayer = new PcmPlayer<Int32Array>(44100, 2, Int32Array, 750)
+      const CUSTOM_MAX_BLOCKS = 750
+      const expectedSize =
+        RENDER_QUANTUM_FRAMES * Int32Array.BYTES_PER_ELEMENT * CUSTOM_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
+      expect(customPlayer.getRawBuffer().byteLength).toBe(expectedSize)
+      customPlayer.stop()
+    })
+  })
+
+  describe('feed', () => {
+    it('should accept and feed Int32Array data', () => {
+      const testData = new Int32Array([1000000, 2000000, 3000000])
+      player.feed(testData)
+      expect(player['buffers']).toContainEqual(testData)
+    })
+
+    it('should feed Int32Array to worklet when initialized', async () => {
+      await player.start()
+      const testData = new Int32Array([1000000, 2000000, 3000000])
+      player.feed(testData)
+      expect(player['buffers']).toEqual([])
+    })
+  })
+
+  describe('start', () => {
+    it('should pass int32 type to worklet', async () => {
+      await player.start()
+      expect(player['worklet']).toBeDefined()
+    })
+  })
+})
+
+describe('PcmPlayer with Float32Array', () => {
+  let player: PcmPlayer<Float32Array>
+
+  beforeEach(() => {
+    player = new PcmPlayer<Float32Array>(44100, 2, Float32Array)
+  })
+
+  afterEach(async () => {
+    await player.stop()
+  })
+
+  describe('Constructor', () => {
+    it('should initialize with Float32Array type', () => {
+      expect(player['pcmType']).toBe(Float32Array)
+      expect(player['pcmTypeInfo'].name).toBe('float32')
+      expect(player['pcmTypeInfo'].bytesPerElement).toBe(4)
+    })
+
+    it('should have correct SharedArrayBuffer size for Float32', () => {
+      const expectedSize =
+        RENDER_QUANTUM_FRAMES * Float32Array.BYTES_PER_ELEMENT * DEFAULT_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
+      expect(player.getRawBuffer().byteLength).toBe(expectedSize)
+    })
+
+    it('should accept custom maxBlocks for Float32', () => {
+      const customPlayer = new PcmPlayer<Float32Array>(44100, 2, Float32Array, 250)
+      const CUSTOM_MAX_BLOCKS = 250
+      const expectedSize =
+        RENDER_QUANTUM_FRAMES * Float32Array.BYTES_PER_ELEMENT * CUSTOM_MAX_BLOCKS + RING_BUFFER_POINTER_SIZE
+      expect(customPlayer.getRawBuffer().byteLength).toBe(expectedSize)
+      customPlayer.stop()
+    })
+  })
+
+  describe('feed', () => {
+    it('should accept and feed Float32Array data', () => {
+      const testData = new Float32Array([0.5, 0.75, -0.3])
+      player.feed(testData)
+      expect(player['buffers']).toContainEqual(testData)
+    })
+
+    it('should feed Float32Array to worklet when initialized', async () => {
+      await player.start()
+      const testData = new Float32Array([0.5, 0.75, -0.3])
+      player.feed(testData)
+      expect(player['buffers']).toEqual([])
+    })
+  })
+
+  describe('start', () => {
+    it('should pass float32 type to worklet', async () => {
+      await player.start()
+      expect(player['worklet']).toBeDefined()
+    })
+  })
+})
+
+describe('PcmPlayer backward compatibility', () => {
+  it('should default to Int16Array when no type specified', () => {
+    const player = new PcmPlayer(44100, 2)
+    expect(player['pcmType']).toBe(Int16Array)
+    expect(player['pcmTypeInfo'].name).toBe('int16')
+  })
+
+  it('should accept Int16Array data with default constructor', async () => {
+    const player = new PcmPlayer(44100, 2)
+    const testData = new Int16Array([100, 200, 300])
+    player.feed(testData)
+    expect(player['buffers']).toContainEqual(testData)
+    await player.stop()
+  })
+
+  it('should work with existing code without modifications', async () => {
+    const player = new PcmPlayer(48000, 2)
+    const testData = new Int16Array([1, 2, 3, 4, 5, 6])
+
+    player.feed(testData)
+    await player.start()
+
+    expect(player['worklet']).toBeDefined()
+    await player.stop()
   })
 })

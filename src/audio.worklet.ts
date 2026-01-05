@@ -20,21 +20,21 @@ type TypedArray =
  *
  * @author padenot
  */
-class RingBuffReader {
-  private storage: Int16Array
+class RingBuffReader<T extends TypedArray> {
+  private storage: T
   private writePointer: Uint32Array
   private readPointer: Uint32Array
 
-  constructor(buffer: SharedArrayBuffer) {
+  constructor(buffer: SharedArrayBuffer, ArrayConstructor: any) {
     const storageSize =
-      (buffer.byteLength - RING_POINTERS_SIZE) / Int16Array.BYTES_PER_ELEMENT
-    this.storage = new Int16Array(buffer, RING_POINTERS_SIZE, storageSize)
+      (buffer.byteLength - RING_POINTERS_SIZE) / ArrayConstructor.BYTES_PER_ELEMENT
+    this.storage = new ArrayConstructor(buffer, RING_POINTERS_SIZE, storageSize) as T
     // matching capacity and R/W pointers defined in ringbuf.js
     this.writePointer = new Uint32Array(buffer, 0, 1)
     this.readPointer = new Uint32Array(buffer, 4, 1)
   }
 
-  readTo(array: Int16Array): number {
+  readTo(array: T): number {
     const { readPos, available } = this.getReadInfo()
     if (available === 0) {
       return 0
@@ -84,22 +84,49 @@ class RingBuffReader {
 
 class PCMWorkletProcessor extends AudioWorkletProcessor {
   private underflowing = false
-  private reader: RingBuffReader
-  private readerOutput: Int16Array
+  private reader: RingBuffReader<any>
+  private readerOutput: any
   private channels: number
+  private converter: (value: number) => number
 
   constructor(options: {
-    processorOptions: { sab: SharedArrayBuffer; channels: number }
+    processorOptions: {
+      sab: SharedArrayBuffer
+      channels: number
+      pcmType: 'int16' | 'int32' | 'float32'
+    }
   }) {
     super()
-    const { sab, channels } = options.processorOptions
+    const { sab, channels, pcmType } = options.processorOptions
     this.channels = channels
-    this.reader = new RingBuffReader(sab)
-    this.readerOutput = new Int16Array(RENDER_QUANTUM_FRAMES * channels)
+
+    // Select appropriate array constructor and converter based on PCM type
+    const { ArrayConstructor, converter } = this.getTypeConfig(pcmType)
+    this.reader = new RingBuffReader(sab, ArrayConstructor)
+    this.readerOutput = new ArrayConstructor(RENDER_QUANTUM_FRAMES * channels)
+    this.converter = converter
   }
 
-  toFloat32(value: number) {
-    return value / 32768
+  private getTypeConfig(pcmType: 'int16' | 'int32' | 'float32') {
+    switch (pcmType) {
+      case 'int16':
+        return {
+          ArrayConstructor: Int16Array,
+          converter: (value: number) => value / 32768
+        }
+      case 'int32':
+        return {
+          ArrayConstructor: Int32Array,
+          converter: (value: number) => value / 2147483648
+        }
+      case 'float32':
+        return {
+          ArrayConstructor: Float32Array,
+          converter: (value: number) => value // Passthrough, already normalized
+        }
+      default:
+        throw new Error(`Unsupported PCM type: ${pcmType}`)
+    }
   }
 
   process(_: Float32Array[][], outputs: Float32Array[][]) {
@@ -120,12 +147,12 @@ class PCMWorkletProcessor extends AudioWorkletProcessor {
       // split interleaved audio as it comes from the dongle by splitting it across the channels
       if (this.channels === 2) {
         for (let channel = 0; channel < this.channels; channel++) {
-          outputChannels[channel][i] = this.toFloat32(
+          outputChannels[channel][i] = this.converter(
             this.readerOutput[2 * i + channel],
           )
         }
       } else {
-        outputChannels[0][i] = this.toFloat32(this.readerOutput[i])
+        outputChannels[0][i] = this.converter(this.readerOutput[i])
       }
     }
 

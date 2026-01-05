@@ -1,4 +1,5 @@
 import { TonePlayer } from './components/TonePlayer'
+import { WavPlayer } from './components/WavPlayer'
 import './App.css'
 
 function App() {
@@ -10,13 +11,19 @@ function App() {
       </header>
 
       <main>
-        <TonePlayer />
+        <div className="players-container">
+          <TonePlayer />
+          <WavPlayer />
+        </div>
       </main>
 
       <footer>
         <p>
-          This example demonstrates programmatic PCM audio generation and playback
+          This example demonstrates programmatic PCM audio generation and WAV file playback
           using SharedArrayBuffer and AudioWorklet for efficient, low-latency audio streaming.
+        </p>
+        <p>
+          Supports Int16, Int32, and Float32 PCM audio formats.
         </p>
         <p>
           <a
