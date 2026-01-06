@@ -1,10 +1,11 @@
 # pcm-ringbuf-player
 
-A TypeScript library for playing PCM audio in the browser with support for multiple formats (Int16, Int32, Float32). Uses a ring buffer for efficient, low-latency transport of data between the main thread and the audio thread.
+A TypeScript library for playing PCM audio in the browser with support for multiple formats (Int16, Int24, Int32, Float32). Uses a ring buffer for efficient, low-latency transport of data between the main thread and the audio thread.
 
 ## Features
 
 - ✅ **Multiple PCM formats**: Int16Array, Int32Array, Float32Array
+- ✅ **24-bit PCM support** with conversion utilities
 - ✅ **TypeScript generics** for type-safe audio data handling
 - ✅ **Configurable buffer size** for different latency/stability requirements
 - ✅ **Low-latency playback** using AudioWorklet and SharedArrayBuffer
@@ -76,7 +77,7 @@ const smallBufferPlayer = new PcmPlayer<Int16Array>(48000, 2, Int16Array, 500)
 
 See the [example](./example) folder for a complete React + Vite + TypeScript application demonstrating:
 - **Tone Player**: Programmatic PCM tone generation with selectable formats (Int16/Int32/Float32)
-- **WAV File Player**: Upload and play WAV files (supports 8-bit, 16-bit, 32-bit PCM and 32-bit Float)
+- **WAV File Player**: Upload and play WAV files (supports 8-bit, 16-bit, 24-bit, 32-bit PCM and 32-bit Float)
 - Real-time audio playback with play/stop/restart controls
 - Proper setup with required SharedArrayBuffer headers
 
@@ -88,9 +89,9 @@ npm run dev
 ```
 
 The example automatically detects WAV file formats including:
-- PCM (8-bit, 16-bit, 32-bit integer)
+- PCM (8-bit, 16-bit, 24-bit, 32-bit integer)
 - IEEE Float (32-bit)
-- WAVE_FORMAT_EXTENSIBLE (common in 32-bit files)
+- WAVE_FORMAT_EXTENSIBLE (common in 24-bit and 32-bit files)
 
 ## API
 
@@ -159,6 +160,62 @@ import type { PcmArrayType, PcmArrayConstructor } from 'pcm-ringbuf-player'
 // PcmArrayConstructor<T> - Conditional type for array constructors
 ```
 
+## 24-bit PCM Support
+
+Since JavaScript doesn't have a native Int24Array type, 24-bit PCM data must be converted to Int32Array. The library provides utility functions for this:
+
+### `pcm24ToInt32(data, littleEndian?): Int32Array`
+Converts 24-bit PCM data (stored as Uint8Array) to Int32Array.
+
+**Parameters:**
+- `data: Uint8Array` - Raw 24-bit PCM data (3 bytes per sample)
+- `littleEndian?: boolean` - Byte order (default: `true`)
+
+**Returns:** `Int32Array` with converted samples
+
+**Example:**
+```typescript
+import { pcm24ToInt32 } from 'pcm-ringbuf-player'
+
+// 24-bit PCM data from file or network
+const pcm24Data = new Uint8Array([/* 3 bytes per sample */])
+
+// Convert to Int32Array for playback
+const int32Data = pcm24ToInt32(pcm24Data, true) // little-endian
+
+// Use with PcmPlayer
+const player = new PcmPlayer<Int32Array>(48000, 2, Int32Array)
+await player.start()
+player.feed(int32Data)
+```
+
+### `pcm24BufferToInt32(buffer, offset?, length?, littleEndian?): Int32Array`
+Converts 24-bit PCM data from ArrayBuffer to Int32Array.
+
+**Parameters:**
+- `buffer: ArrayBuffer` - Buffer containing 24-bit PCM data
+- `offset?: number` - Byte offset (default: `0`)
+- `length?: number` - Length in bytes (default: entire buffer from offset)
+- `littleEndian?: boolean` - Byte order (default: `true`)
+
+**Returns:** `Int32Array` with converted samples
+
+**Example:**
+```typescript
+import { pcm24BufferToInt32 } from 'pcm-ringbuf-player'
+
+// From WAV file or other source
+const arrayBuffer = await file.arrayBuffer()
+
+// Convert starting at byte 44 (typical WAV data offset), 1000 bytes
+const int32Data = pcm24BufferToInt32(arrayBuffer, 44, 1000)
+```
+
+### `getPcm24Range(): { min, max, bits }`
+Returns the valid range for 24-bit PCM values.
+
+**Returns:** `{ min: -8388608, max: 8388607, bits: 24 }`
+
 ## Buffer Size Guidelines
 
 The `maxBlocks` parameter controls the ring buffer size. Each block is 128 samples (RENDER_QUANTUM_FRAMES).
@@ -182,8 +239,11 @@ The `maxBlocks` parameter controls the ring buffer size. Each block is 128 sampl
 | Format | TypedArray | Range | Bytes/Sample | Common Usage |
 |--------|-----------|-------|--------------|--------------|
 | 16-bit PCM | Int16Array | -32768 to 32767 | 2 | CD quality, most common |
+| 24-bit PCM | Int32Array* | -8388608 to 8388607 | 3 | Professional audio, studio recordings |
 | 32-bit PCM | Int32Array | -2147483648 to 2147483647 | 4 | High precision integer |
 | 32-bit Float | Float32Array | -1.0 to 1.0 | 4 | Professional audio, DAWs |
+
+**Note:** *24-bit PCM is automatically converted to Int32Array (JavaScript has no Int24Array type). The conversion preserves full 24-bit precision.
 
 ## Contributing
 
@@ -198,8 +258,9 @@ Contributions are welcome! Please open a PR with:
 - [x] Support multiple TypedArrays (Int16, Int32, Float32)
 - [x] Documentation
 - [x] Configurable buffer size
-- [ ] Support for 24-bit PCM
+- [x] Support for 24-bit PCM
 - [ ] Real-time resampling
+- [ ] Support for other formats (8-bit signed, 64-bit)
 
 ## Performance Tips
 
@@ -225,6 +286,7 @@ Contributions are welcome! Please open a PR with:
 
 4. **Choose appropriate format**:
    - Use **Int16Array** for most cases (2 bytes/sample, good quality)
+   - Use **24-bit PCM → Int32Array** for professional audio (3 bytes/sample source, 4 bytes/sample converted)
    - Use **Int32Array** for high-precision requirements (4 bytes/sample)
    - Use **Float32Array** when audio is already normalized (4 bytes/sample, common in DSP)
 

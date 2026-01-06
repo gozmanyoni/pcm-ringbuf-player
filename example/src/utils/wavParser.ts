@@ -1,4 +1,5 @@
 import type { PcmArrayType } from 'pcm-ringbuf-player'
+import { pcm24BufferToInt32 } from 'pcm-ringbuf-player'
 
 export interface WavFileInfo {
   sampleRate: number
@@ -97,6 +98,11 @@ export async function parseWavFile(file: File): Promise<WavFileInfo> {
             new Uint8Array(alignedBuffer).set(uint8Data)
             pcmData = new Int16Array(alignedBuffer)
           }
+        } else if (bitsPerSample === 24) {
+          // Convert 24-bit PCM to Int32Array
+          // 24-bit uses 3 bytes per sample, no alignment issues
+          pcmType = 'int32'
+          pcmData = pcm24BufferToInt32(arrayBuffer, dataOffset, dataSize, true)
         } else if (bitsPerSample === 32) {
           pcmType = 'int32'
           // Check if offset is aligned to 4-byte boundary

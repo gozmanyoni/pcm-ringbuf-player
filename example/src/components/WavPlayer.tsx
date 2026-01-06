@@ -232,6 +232,7 @@ export function WavPlayer() {
         <ul>
           <li><strong>8-bit PCM:</strong> Automatically converted to 16-bit</li>
           <li><strong>16-bit PCM:</strong> Standard CD quality</li>
+          <li><strong>24-bit PCM:</strong> Professional audio (converted to 32-bit)</li>
           <li><strong>32-bit PCM:</strong> High-precision integer audio</li>
           <li><strong>32-bit Float:</strong> Professional audio format</li>
         </ul>
