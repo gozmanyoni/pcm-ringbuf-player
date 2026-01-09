@@ -11,12 +11,115 @@ A TypeScript library for playing PCM audio in the browser with support for multi
 - ✅ **Low-latency playback** using AudioWorklet and SharedArrayBuffer
 - ✅ **Volume control** with optional ramping
 - ✅ **Type-aware conversion** automatically normalizes to Float32 for Web Audio API
+- ✅ **Official Vite and Webpack plugins** for seamless integration
 
 ## Installation
 
 ```bash
 npm install pcm-ringbuf-player
 ```
+
+## Build Tool Integration
+
+Since `pcm-ringbuf-player` uses AudioWorklet and SharedArrayBuffer, it requires:
+1. The `audio.worklet.js` file to be copied to your output directory
+2. Proper HTTP headers for SharedArrayBuffer support
+
+The library provides official plugins for Vite and Webpack to automate both of these requirements.
+
+### Vite Plugin
+
+```bash
+npm install pcm-ringbuf-player
+```
+
+**vite.config.ts:**
+```typescript
+import { defineConfig } from 'vite'
+import { pcmPlayerPlugin } from 'pcm-ringbuf-player/vite'
+
+export default defineConfig({
+  plugins: [
+    pcmPlayerPlugin(), // Automatically copies worklet and sets headers
+  ],
+})
+```
+
+**Options:**
+```typescript
+pcmPlayerPlugin({
+  setHeaders: true  // Set to false to disable automatic CORS headers (default: true)
+})
+```
+
+**What the plugin does:**
+- ✅ Copies `audio.worklet.js` to your `dist/` folder during build
+- ✅ Serves the worklet file at `/audio.worklet.js` in dev mode
+- ✅ Automatically sets required SharedArrayBuffer headers:
+  - `Cross-Origin-Opener-Policy: same-origin`
+  - `Cross-Origin-Embedder-Policy: require-corp`
+
+### Webpack Plugin
+
+```bash
+npm install pcm-ringbuf-player
+```
+
+**webpack.config.js:**
+```javascript
+const { PcmPlayerWebpackPlugin } = require('pcm-ringbuf-player/webpack')
+
+module.exports = {
+  plugins: [
+    new PcmPlayerWebpackPlugin(), // Automatically copies worklet and sets headers
+  ],
+}
+```
+
+**Options:**
+```javascript
+new PcmPlayerWebpackPlugin({
+  outputDir: 'dist',     // Output directory (default: 'dist')
+  setHeaders: true       // Auto-configure webpack-dev-server headers (default: true)
+})
+```
+
+**What the plugin does:**
+- ✅ Copies `audio.worklet.js` to your output directory after build
+- ✅ Automatically configures webpack-dev-server headers for SharedArrayBuffer
+- ✅ Works with both build and development modes
+
+**Manual header configuration (if setHeaders: false):**
+```javascript
+const { PcmPlayerWebpackPlugin } = require('pcm-ringbuf-player/webpack')
+
+module.exports = {
+  plugins: [
+    new PcmPlayerWebpackPlugin({ setHeaders: false }),
+  ],
+  devServer: {
+    ...PcmPlayerWebpackPlugin.getDevServerConfig(), // Manual config
+  },
+}
+```
+
+### Without a Build Tool Plugin
+
+If you're not using Vite or Webpack, you need to:
+
+1. **Copy the worklet file manually** from `node_modules/pcm-ringbuf-player/dist/audio.worklet.js` to your public/static directory
+
+2. **Set the required headers** on your development server:
+   ```
+   Cross-Origin-Opener-Policy: same-origin
+   Cross-Origin-Embedder-Policy: require-corp
+   ```
+
+3. **Load the worklet** with the correct path in your code:
+   ```typescript
+   const player = new PcmPlayer(48000, 2)
+   await player.start() // Loads from /audio.worklet.js by default
+   ```
 
 ## Quick Start
 
@@ -308,7 +411,9 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
-**Development Note:** The example app uses Vite which automatically sets these headers in development mode.
+**Using build plugins:** The official [Vite](#vite-plugin) and [Webpack](#webpack-plugin) plugins automatically configure these headers for you in both development and production.
+
+**Manual configuration:** If not using the plugins, you'll need to configure your server to send these headers. See the [Build Tool Integration](#build-tool-integration) section for manual setup instructions.
 
 For more information see the [SharedArrayBuffer MDN docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
 
